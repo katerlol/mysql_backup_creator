@@ -1,0 +1,21 @@
+{
+  "servers": [
+    {
+      "host": "localhost",
+      "user": "root",
+      "passwd": "devel",
+      "scheduler": "* * * * *",
+      "backup_path": "D:/Dokumente/Backups/",
+      "compress": false,
+      "store_days": 14,
+      "schemas": [
+        {
+          "schema": "dbumper"
+        },
+        {
+          "schema": "lulubot"
+        }
+      ]
+    }
+  ]
+}
