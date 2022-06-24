@@ -4,13 +4,14 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "start": "node index.js"
+    "start": "node index.js",
+    "test": "mocha"
   },
   "author": "",
   "license": "ISC",
   "dependencies": {
     "fs": "^0.0.1-security",
-    "minizlib": "^2.1.2",
+    "mocha": "^10.0.0",
     "moment": "^2.29.3",
     "mysqldump": "^3.2.0",
     "node-cron": "^3.0.1",

@@ -3,6 +3,7 @@ const cron = require('node-cron');
 const mysqldump = require('mysqldump');
 const moment = require('moment');
 const zlib = require('minizlib');
+const Backup_cleanup = require("./backup_cleanup");
 
 if (!fs.existsSync('config.json')) {
     fs.writeFileSync('config.json', JSON.stringify({
@@ -13,7 +14,12 @@ if (!fs.existsSync('config.json')) {
                 "passwd": "ENTER MYSQL PASSWD",
                 "scheduler": "0 2 * * *",
                 "backup_path": "C:/MySQL_Backups/",
-                "store_days": 14,
+                "backup_type": "periodic",
+                "storage_period": {
+                    "daily": 7,
+                    "weekly": 4,
+                    "monthly": 6
+                },
                 "compress": true,
                 "schemas": [
                     {
@@ -49,7 +55,7 @@ async function makeBackup (server) {
                 console.log(`Error while creating the directory ${backupPath}`)});
         }
 
-        const fileName = `${backupPath}/${moment().format(`YYYY-MM-DD_hh-mm`)}-${schema.schema}.sql`;
+        const fileName = `${backupPath}/${moment().format(`YYYY-MM-DD_HH-mm`)}-${schema.schema}.sql`;
 
         await mysqldump({
             connection: {
@@ -64,17 +70,7 @@ async function makeBackup (server) {
     }
 
     for(const schema of server.schemas) {
-        if(parseInt(server.store_days) > 0) {
-            // clean up old data
-            const backupFolders = fs.readdirSync(`${userBackupPath}${schema.schema}`);
-            for (const backupFolder of backupFolders) {
-                // try parse backup folder into date
-                if(moment(backupFolder).diff(moment(), 'days') + server.store_days < 0) {
-                    console.log(`found old log that is not needed anymore: ${schema.schema}/${backupFolder}`);
-                    fs.rmdirSync(`${userBackupPath}${schema.schema}/${backupFolder}`, { recursive: true });
-                }
-            }
-        }
+        Backup_cleanup.handleCleanup(server.backup_type, server, schema)
     }
 }
 

@@ -1,11 +1,11 @@
-#MySQL Backup Creator
+# MySQL Backup Creator
 
 This is an approach to make easy MySQL Backups on servers.
 
 The configuration is done in a config.json file. 
 
 
-##1. Installation:
+## 1. Installation:
 
 Install all the missing packages by running:
 
@@ -14,13 +14,12 @@ npm install
 ``
 
 - "fs": "^0.0.1-security",
-- "minizlib": "^2.1.2",
 - "moment": "^2.29.3",
 - "mysqldump": "^3.2.0",
 - "node-cron": "^3.0.1",
 - "uuid": "^8.3.2"
 
-##2. Configuration
+## 2. Configuration
 
 Run the app once to generate a template `config.json`:
 
@@ -34,7 +33,12 @@ Run the app once to generate a template `config.json`:
       "scheduler": "* * * * *",
       "backup_path": "C:/MySQLBackups/",
       "compress": false,
-      "store_days": 14,
+      "backup_type": "periodic",
+      "storage_period": {
+        "daily": 7,
+        "weekly": 4,
+        "monthly": 6
+      },
       "schemas": [
         {
           "schema": "YOUR_DATABASE"
@@ -47,17 +51,34 @@ Run the app once to generate a template `config.json`:
   ]
 }
 ````
+| Config-Key  | Options            |                                                                                                                                                                                                                                                       | Value options      |
+|-------------|--------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|--------------------|
+ | **Servers** |                    | A list of servers that can be backed up.                                                                                                                                                                                                              | Array of Servers   |
+|             | **user**           | Your server address. e.h. localhost.                                                                                                                                                                                                                  | String             |
+|             | **passwd**         | Password to the MySQL server.                                                                                                                                                                                                                         | String             |
+|             | **scheduler**      | Scheduler, when the back should be done. Follows the Cron schedule expressions.                                                                                                                                                                       | Cron Schedule      |
+|             | **backup_path**    | The path where the backups can be found. If the path doesn't exist, it will be created, if possible.                                                                                                                                                  | String             |
+|             | **compress**       | Determines, wether the data should be compressed.                                                                                                                                                                                                     | boolean            |
+|             | **backup_type**    | Determines, wether the data should be compressed.                                                                                                                                                                                                     | "periodic", "amount" |
+|             | **storage_period** | *This is only used, if the **backup_type** is set to **periodic**.*<br/> **daily**: How many days a daily backup will exist.<br/>**weekly**:How many weeks a weekly backup will exist. <br/>**monthly**: How many months a monthly backup will exist. | integer, 0 if infinite |
+|             | **backup_amount**  | *This is only used, if the **backup_type** is set to **amount**.*<br/>Amount of backups, that should be stored.                                                                                                                                       | integer, 0 if infinite |
+|             | **schemas**        | A list of databases/schemas that should be saved from this server.                                                                                                                                                                                    | Array of Schemas   |
 
-##3. Start the application
+
+
+
+
+## 3. Start the application
 
 ```
 npm run start
 ```
 
-##4. Features
+## 4. Features
 Following features will to be added:
 - [x] Automatic cleanup on old database logs
 - [ ] Dynamic mode for MySQL backups
 - [ ] Compress MySQL backups
 - [ ] Notify user on failed backups
 
+## 5. 
