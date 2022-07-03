@@ -17,8 +17,14 @@ if (!fs.existsSync('config.json')) {
                 "backup_type": "periodic",
                 "storage_period": {
                     "daily": 7,
-                    "weekly": 4,
-                    "monthly": 6
+                    "weekly": {
+                        "weeks": 4,
+                        "storage_day": 6
+                    },
+                    "monthly": {
+                        "months": 6,
+                        "storage_day": 31
+                    }
                 },
                 "compress": true,
                 "schemas": [

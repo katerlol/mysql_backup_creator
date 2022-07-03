@@ -27,36 +27,66 @@ module.exports = {
     },
 
     getBackupsToDelete(backupDates, storage_period, now) {
-        const keepDaily = parseInt(storage_period.daily) > 0;
-        const keepWeekly = parseInt(storage_period.weekly) > 0;
-        const keepMonthly = parseInt(storage_period.monthly) > 0;
+        const backupsToKeep = this.getValidBackups(backupDates, storage_period, now);
+        const backupsToDelete = backupDates.filter(e => backupsToKeep[e] == null);
+        return backupsToDelete;
+    },
 
+    getValidBackups(backupDates, storage_period, now) {
+        const keepDaily = storage_period.daily ? parseInt(storage_period.daily) > 0 : false;
+        const keepWeekly = storage_period.weekly ? parseInt(storage_period.weekly.weeks) > 0 : false;
+        const keepMonthly = storage_period.monthly ? parseInt(storage_period.monthly.months) > 0 : false;
 
-        const backupsToDelete = [];
+        const backupsToKeep = [];
 
-        if (keepDaily || keepWeekly || keepMonthly) {
-            for (const backupDate of backupDates) {
-                const backupFolderDate = moment(backupDate);
-                // check if it's a daily store
-                if (backupFolderDate.diff(now, 'days') + storage_period.daily < 0) {
-                    // further check if it is a weekly store
-                    if (backupFolderDate.diff(now, 'weeks') + storage_period.weekly <= 0) {
-                        // further check if it is a monthly store
-                        if (backupFolderDate.diff(now, 'months') + storage_period.weekly <= 0) {
-                            backupsToDelete.push(backupDate);
-                        } else if (backupFolderDate.month() !== 1) {
-                            // keep, otherwise delete
-                            backupsToDelete.push(backupDate);
-                        }
-                    } else if (backupFolderDate.weekday() !== 3) {
-                        // keep, otherwise delete
-                        backupsToDelete.push(backupDate);
+        // keep or destroy?
+        for (const backupDate of backupDates) {
+            const date = moment(backupDate);
+
+            // if applies for monthly check if the date of the back up is the first of the month
+            if (keepMonthly) {
+
+                // check if this day is available in this month
+                const storageMonthDay =
+                    date.daysInMonth() > storage_period.monthly.storage_day
+                        ? storage_period.monthly.storage_day
+                        : date.daysInMonth();
+
+                // check if backup should be kept for monthly
+                if (date.diff(now, 'months') + storage_period.monthly.months >= 0) {
+                    // check if the backup is from the proper day
+                    if (date.date() === storageMonthDay) {
+                        backupsToKeep[backupDate] = backupDate;
                     }
+                }
+            }
+
+            // if backup applies for weekly, check if its on the proper weekday
+            if (keepWeekly) {
+
+                // check if storage day is on the proper day
+                const storageWeekDay = storage_period.weekly.storage_day;
+
+                // check if the week should be kept
+                if (date.diff(now, 'weeks') + storage_period.weekly.weeks >= 0) {
+
+                    // check if it's the proper weekday
+                    if (date.weekday() === storageWeekDay) {
+                        backupsToKeep[backupDate] = backupDate;
+                    }
+                }
+            }
+
+            // check if applies for a daily backup
+            if (keepDaily) {
+
+                if (date.diff(now, 'days') + storage_period.daily >= 0) {
+                    backupsToKeep[backupDate] = backupDate;
                 }
             }
         }
 
-        return backupsToDelete;
+        return backupsToKeep;
     },
 
     cleanupByAmount(server, schema, userBackupPath) {
