@@ -28,8 +28,7 @@ module.exports = {
 
     getBackupsToDelete(backupDates, storage_period, now) {
         const backupsToKeep = this.getValidBackups(backupDates, storage_period, now);
-        const backupsToDelete = backupDates.filter(e => backupsToKeep[e] == null);
-        return backupsToDelete;
+        return backupDates.filter(e => backupsToKeep[e] == null);
     },
 
     getValidBackups(backupDates, storage_period, now) {
