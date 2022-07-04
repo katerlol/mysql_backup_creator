@@ -25,30 +25,33 @@ Run the app once to generate a template `config.json`:
 
 ````json
 {
-  "servers": [
-    {
-      "host": "localhost",
-      "user": "YOUR_USER",
-      "passwd": "YOUR_PASSWORD",
-      "scheduler": "* * * * *",
-      "backup_path": "C:/MySQLBackups/",
-      "compress": false,
-      "backup_type": "periodic",
-      "storage_period": {
-        "daily": 7,
-        "weekly": 4,
-        "monthly": 6
+  "servers": [{
+    "host": "localhost",
+    "user": "YOUR_USER",
+    "passwd": "YOUR_PASSWORD",
+    "scheduler": "* * * * *",
+    "backup_path": "C:/MySQLBackups/",
+    "compress": false,
+    "backup_type": "periodic",
+    "storage_period": {
+      "daily": 4,
+      "weekly": {
+        "weeks": 4,
+        "storage_day": 6
       },
-      "schemas": [
-        {
-          "schema": "YOUR_DATABASE"
-        },
-        {
-          "schema": "ANOTHER_DATABASE_ON_THE_SAME_SERVER"
-        }
-      ]
-    }
-  ]
+      "monthly": {
+        "months": 6,
+        "storage_day": 31
+      }
+    },
+    "schemas": [{
+      "schema": "YOUR_DATABASE"
+    },
+      {
+        "schema": "ANOTHER_DATABASE_ON_THE_SAME_SERVER"
+      }
+    ]
+  }]
 }
 ````
 | Config-Key  | Options                    |                                                                                                                                                                                                                                                                                                               | Value options          |
