@@ -3,7 +3,9 @@ const cron = require('node-cron');
 const mysqldump = require('mysqldump');
 const moment = require('moment');
 const Backup_cleanup = require("./backup_cleanup");
-const {gzip} = require('node-gzip');
+const encryption = require("./encryption");
+const AppendInitVect = require('./AppendInitVector');
+const zlib = require('zlib');
 
 if (!fs.existsSync('config.json')) {
     fs.writeFileSync('config.json', JSON.stringify({
@@ -27,6 +29,8 @@ if (!fs.existsSync('config.json')) {
                     }
                 },
                 "compress": true,
+                "encrypt": false,
+                "encrypt_passwd": "ENTER_ENCRYPTION_PASSWD",
                 "schemas": [
                     {
                         "schema": "ENTER_SCHEMA_NAME"
@@ -55,7 +59,7 @@ async function makeBackup (server) {
     const userBackupPath = server.backup_path.endsWith('/') ? server.backup_path : `${server.backup_path}/`;
 
     for(const schema of server.schemas) {
-        let backupPath = `${userBackupPath}${schema.schema}/${moment().format(`YYYY-MM-DD`)}`;
+        let backupPath = `${userBackupPath}${server.host}/${schema.schema}/${moment().format(`YYYY-MM-DD`)}`;
         if (!fs.existsSync(backupPath)){
             fs.mkdirSync(backupPath, {recursive: true}, err => {
                 console.log(`Error while creating the directory ${backupPath}`)});
@@ -73,13 +77,34 @@ async function makeBackup (server) {
             dumpToFile: fileName,
         });
 
-        if(server.compress) {
-            // compress file
-            const compressed = await gzip(fs.readFileSync(fileName));
-            fs.writeFileSync(`${fileName}.gz`, compressed);
+        // check if file has to be processed further
+        if(server.compress || server.encrypt) {
+            let newFileName = fileName;
+            // make the readstream
+            let pipedStream = fs.createReadStream(fileName);
+
+            if(server.compress) {
+                newFileName += '.gz';
+                // add compression
+                pipedStream = pipedStream.pipe(zlib.createGzip());
+            }
+
+            if(server.encrypt) {
+                newFileName += '.enc';
+
+                const key = encryption.getCipherKey(server.encrypt_passwd);
+                const initVector = encryption.getInitVector();
+
+                // add encryption (also for large files)
+                pipedStream = pipedStream.pipe(encryption.getCryptoStream(key, initVector));
+                pipedStream = pipedStream.pipe(new AppendInitVect(initVector));
+            }
+
+            // add a writer
+            pipedStream = pipedStream.pipe(fs.createWriteStream(newFileName));
 
             // now delete old file
-            fs.unlinkSync(fileName);
+            pipedStream.on('finish', () => fs.unlinkSync(fileName));
         }
     }
 
