@@ -80,8 +80,11 @@ npm run start
 ## 4. Features
 Following features will to be added:
 - [x] Automatic cleanup on old database logs
-- [ ] Dynamic mode for MySQL backups
-- [ ] Compress MySQL backups
+- [x] Dynamic mode for MySQL backups
+- [x] Compress MySQL backups
 - [ ] Notify user on failed backups
+- [ ] Add FTP Servers to upload
+- [ ] Support MS SQL Databases aswell
+- [ ] Build a UI in order to make it easier
+- [ ] Add heartbeat service in order to check backups
 
-## 5. 

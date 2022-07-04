@@ -2,8 +2,8 @@ const fs = require('fs');
 const cron = require('node-cron');
 const mysqldump = require('mysqldump');
 const moment = require('moment');
-const zlib = require('minizlib');
 const Backup_cleanup = require("./backup_cleanup");
+const {gzip} = require('node-gzip');
 
 if (!fs.existsSync('config.json')) {
     fs.writeFileSync('config.json', JSON.stringify({
@@ -71,8 +71,16 @@ async function makeBackup (server) {
                 database:schema.schema,
             },
             dumpToFile: fileName,
-            compressFile: false,
         });
+
+        if(server.compress) {
+            // compress file
+            const compressed = await gzip(fs.readFileSync(fileName));
+            fs.writeFileSync(`${fileName}.gz`, compressed);
+
+            // now delete old file
+            fs.unlinkSync(fileName);
+        }
     }
 
     for(const schema of server.schemas) {
